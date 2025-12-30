@@ -153,3 +153,97 @@ Database connection errors
 - Confirm Postgres is running
 - Confirm the database recipes_db exists
 - Confirm DATABASE_URL in .env is correct
+
+
+## Frontend (UI) — React + TypeScript + Vite + Material UI
+
+### Overview
+The frontend consumes the FastAPI backend and implements the required UI features:
+
+- **Recipes table** with columns:
+  - **Title** (truncates when column width is smaller than content)
+  - **Cuisine**
+  - **Rating** displayed as **stars**
+  - **Total Time**
+  - **Serves**
+- **Row click** opens a **right-side drawer** (detail view) showing:
+  - Title + Cuisine header
+  - Description (key/value)
+  - Total Time with expand icon (expanded view shows Cook Time + Prep Time)
+  - Nutrition table showing:
+    - calories
+    - carbohydrateContent
+    - cholesterolContent
+    - fiberContent
+    - proteinContent
+    - saturatedFatContent
+    - sodiumContent
+    - sugarContent
+    - fatContent
+- **Field-level filters** that call `GET /api/recipes/search`
+- **Server-side pagination** with results-per-page selectable **from 15 to 50**
+- **Fallback states** for **“No results found”** and **“No data found”**
+
+### Location
+Frontend code lives here:
+- `code/frontend/`
+
+Key files:
+- `code/frontend/src/components/RecipeTable.tsx` (table + filters + pagination)
+- `code/frontend/src/components/RecipeDrawer.tsx` (right-side drawer detail view)
+- `code/frontend/src/api.ts` (API client wrapper)
+- `code/frontend/vite.config.ts` (proxy to backend)
+
+---
+
+## Frontend Setup
+```bash
+### 1) Install dependencies
+From the project root:
+
+cd code/frontend
+npm install
+2) Proxy configuration (avoids CORS issues)
+Vite is configured to proxy API requests to the backend.
+
+Confirm vite.config.ts contains something like:
+
+Proxy /api → http://localhost:8000
+
+Proxy /healthz → http://localhost:8000
+
+3) Start the frontend
+bash
+Copy code
+npm run dev
+Open the UI in your browser:
+
+http://127.0.0.1:5173
+
+Backend must be running at the same time:
+
+bash
+Copy code
+cd code/backend
+uvicorn app.main:app --reload --port 8000
+How the UI Calls the Backend
+Default table load uses:
+
+GET /api/recipes?page=<page>&limit=<limit>
+
+When any filter is filled, the UI switches to:
+
+GET /api/recipes/search?...&page=<page>&limit=<limit>
+
+Supported filter inputs:
+
+title (partial match)
+
+cuisine (partial match)
+
+rating (supports comparisons: >=4.5, <=3, =4)
+
+total_time (supports comparisons: <=60, >=120)
+
+calories (supports comparisons: <=400, >=200)
+
